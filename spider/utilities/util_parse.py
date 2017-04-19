@@ -20,12 +20,14 @@ __all__ = [
 
 def get_string_num(string, base=None):
     """
-    get float number from a string, if base is not None, K means (base * B), M means (base * K), ...
+    get a float number from a string, if base isn't None, K means (base * B), M means (base * K), ...
     """
     temp = re.search(r"(?P<num>\d+(\.\d+)?)(?P<param>[\w\W]*?)$", string.upper().strip(), flags=re.IGNORECASE)
     if not temp:
         return 0.0
     num, param = float(temp.group("num")), temp.group("param")
+    if param.find("兆") >= 0:
+        num *= 10000000000000
     if param.find("亿") >= 0:
         num *= 100000000
     if param.find("万") >= 0:
@@ -36,22 +38,23 @@ def get_string_num(string, base=None):
         num *= 100
     if param.find("十") >= 0:
         num *= 10
-    if (param.find("K") >= 0) and base:
-        num *= base
-    if (param.find("M") >= 0) and base:
-        num *= (base * base)
-    if (param.find("G") >= 0) and base:
-        num *= (base * base * base)
-    if (param.find("T") >= 0) and base:
-        num *= (base * base * base * base)
     if param.find("%") >= 0:
         num /= 100
+    if base:
+        if param.find("K") >= 0:
+            num *= base
+        if param.find("M") >= 0:
+            num *= (base * base)
+        if param.find("G") >= 0:
+            num *= (base * base * base)
+        if param.find("T") >= 0:
+            num *= (base * base * base * base)
     return num
 
 
 def get_string_split(string, split_chars=(" ", "\t", ","), is_remove_empty=False):
     """
-    get string list by splitting string based on split_chars, len(split_chars) must >= 2
+    get a string list by splitting string based on split_chars, len(split_chars) must >= 2
     """
     assert len(split_chars) >= 2, "get_string_split: parameter split_chars[%s] is invalid, the length of it must >= 2" % split_chars
     string_list = string.split(split_chars[0])
@@ -62,14 +65,14 @@ def get_string_split(string, split_chars=(" ", "\t", ","), is_remove_empty=False
 
 def get_string_strip(string):
     """
-    get string striped \t, \r, \n from a string, also change None to ""
+    get a string which striped \t, \r, \n from a string, also change None to ""
     """
     return re.sub(r"\s+", " ", string, flags=re.IGNORECASE).strip() if string else ""
 
 
 def get_url_legal(url, base_url, encoding=None):
     """
-    get legal url from a url, based on base_url, and set url_frags.fragment = ""
+    get a legal url from a url, based on base_url, and set url_frags.fragment = ""
     :key: http://stats.nba.com/player/#!/201566/?p=russell-westbrook
     """
     url_join = urllib.parse.urljoin(base_url, url, allow_fragments=True)

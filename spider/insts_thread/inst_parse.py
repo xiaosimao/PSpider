@@ -26,7 +26,7 @@ class Parser(object):
         """
         working function, must "try, except" and don't change parameters and return
         :return (parse_result, url_list, save_list): parse_result can be -1(parse failed), 1(parse success)
-        :return (parse_result, url_list, save_list): url_list is [(url, keys, priority), ...], save_list is [item, ...]
+        :return (parse_result, url_list, save_list): url_list is [(url, keys, priority), ...], save_list is [item(a list or tuple), ...]
         """
         logging.debug("%s start: priority=%s, keys=%s, deep=%s, url=%s", self.__class__.__name__, priority, keys, deep, url)
 
@@ -43,20 +43,18 @@ class Parser(object):
         """
         parse the content of a url, you can rewrite this function, parameters and return refer to self.working()
         """
-        # parse content(cur_code, cur_url, cur_html)
-        *_, cur_html = content
+        # parse content(status_code, url, html_text)
+        *_, html_text = content
 
         # get url_list
         url_list = []
         if (self._max_deep < 0) or (deep < self._max_deep):
-            a_list = re.findall(r"<a[\w\W]+?href=\"(?P<url>[\w\W]{5,}?)\"[\w\W]*?>[\w\W]+?</a>", cur_html, flags=re.IGNORECASE)
+            a_list = re.findall(r"<a[\w\W]+?href=\"(?P<url>[\w\W]{5,}?)\"[\w\W]*?>[\w\W]+?</a>", html_text, flags=re.IGNORECASE)
             url_list = [(_url, keys, priority+1) for _url in [get_url_legal(href, url) for href in a_list]]
-        else:
-            logging.debug("%s stop parse urls: priority=%s, keys=%s, deep=%s, url=%s", self.__class__.__name__, priority, keys, deep, url)
 
         # get save_list
-        title = re.search(r"<title>(?P<title>[\w\W]+?)</title>", cur_html, flags=re.IGNORECASE)
-        save_list = [(title.group("title"), datetime.datetime.now()), ] if title else []
+        title = re.search(r"<title>(?P<title>[\w\W]+?)</title>", html_text, flags=re.IGNORECASE)
+        save_list = [(title.group("title").strip(), datetime.datetime.now()), ] if title else []
 
         # return parse_result, url_list, save_list
         return 1, url_list, save_list

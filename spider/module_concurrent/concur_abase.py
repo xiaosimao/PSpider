@@ -1,7 +1,7 @@
 # _*_ coding: utf-8 _*_
 
 """
-abc_base.py by xianhu
+concur_abase.py by xianhu
 """
 
 import enum
@@ -44,7 +44,7 @@ class BaseThread(threading.Thread):
         """
         rewrite run function, auto running and must call self.work()
         """
-        logging.warning("%s[%s] start", self.__class__.__name__, self.getName())
+        logging.warning("%s[%s] start...", self.__class__.__name__, self.getName())
 
         while True:
             try:
@@ -53,8 +53,14 @@ class BaseThread(threading.Thread):
             except queue.Empty:
                 if self._pool.is_all_tasks_done():
                     break
+            except TypeError:
+                if self._pool.is_all_tasks_done():
+                    break
+            except Exception as excep:
+                logging.error("%s[%s] error: %s", self.__class__.__name__, self.getName(), excep)
+                break
 
-        logging.warning("%s[%s] end", self.__class__.__name__, self.getName())
+        logging.warning("%s[%s] end...", self.__class__.__name__, self.getName())
         return
 
     def working(self):
@@ -69,11 +75,15 @@ class BasePool(object):
     class of BasePool, as base class of each pool
     """
 
-    def __init__(self, url_filter=None):
+    def __init__(self, fetcher, parser, saver, url_filter=None):
         """
         constructor
         """
         self._url_filter = url_filter       # default: None, also can be UrlFilter()
+
+        self._inst_fetcher = fetcher        # fetcher instance or a instance list
+        self._inst_parser = parser          # parser instance
+        self._inst_saver = saver            # saver instance
 
         self._number_dict = {
             TPEnum.TASKS_RUNNING: 0,        # the count of tasks which are running
@@ -123,18 +133,18 @@ class BasePool(object):
 
     def add_a_task(self, task_name, task_content):
         """
-        add a task based on task_name, if queue is full, blocking the queue
+        add a task based on task_name
         """
         raise NotImplementedError
 
     def get_a_task(self, task_name):
         """
-        get a task based on task_name, if queue is empty, raise queue.Empty
+        get a task based on task_name
         """
         raise NotImplementedError
 
     def finish_a_task(self, task_name):
         """
-        finish a task based on task_name, call queue.task_done()
+        finish a task based on task_name
         """
         raise NotImplementedError

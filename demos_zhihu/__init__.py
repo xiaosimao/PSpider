@@ -1,5 +1,5 @@
 # _*_ coding: utf-8 _*_
 
 """
-distributed module
+获取知乎数据
 """
