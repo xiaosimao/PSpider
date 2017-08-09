@@ -22,7 +22,7 @@ class Saver(object):
 
     def working(self, url: str, keys: object, item: (list, tuple)) -> bool:
         """
-        working function, must "try, except" and don't change parameters and return
+        working function, must "try, except" and don't change the parameters and return
         :return save_result: True or False
         """
         logging.debug("%s start: keys=%s, url=%s", self.__class__.__name__, keys, url)

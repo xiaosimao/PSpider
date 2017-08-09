@@ -18,8 +18,8 @@ class UrlFilter(object):
         """
         constructor, use variable of BloomFilter if capacity else variable of set
         """
-        self._re_black_list = [re.compile(pattern, flags=re.IGNORECASE) for pattern in black_patterns]
-        self._re_white_list = [re.compile(pattern, flags=re.IGNORECASE) for pattern in white_patterns]
+        self._re_black_list = [re.compile(pattern, flags=re.IGNORECASE) for pattern in black_patterns] if black_patterns else []
+        self._re_white_list = [re.compile(pattern, flags=re.IGNORECASE) for pattern in white_patterns] if white_patterns else []
 
         self._url_set = set() if not capacity else None
         self._bloom_filter = pybloom_live.ScalableBloomFilter(capacity, error_rate=0.001) if capacity else None
@@ -36,22 +36,31 @@ class UrlFilter(object):
                 self._bloom_filter.add(url)
         return
 
-    def check_and_add(self, url):
+    def check(self, url):
         """
-        check the url to make sure that the url hasn't been fetched, and add url to urlfilter
+        check the url based on self._re_black_list and self._re_white_list
         """
+        # if url in black_list, return False
         for re_black in self._re_black_list:
             if re_black.search(url):
                 return False
 
-        result = False
+        # if url in white_list, return True
         for re_white in self._re_white_list:
             if re_white.search(url):
-                if self._url_set is not None:
-                    result = (url not in self._url_set)
-                    self._url_set.add(url)
-                else:
-                    result = (not self._bloom_filter.add(url))
-                break
+                return True
 
+        return False if self._re_white_list else True
+
+    def check_and_add(self, url):
+        """
+        check the url to make sure that the url hasn't been fetched, and add url to urlfilter
+        """
+        result = False
+        if self.check(url):
+            if self._url_set is not None:
+                result = (url not in self._url_set)
+                self._url_set.add(url)
+            else:
+                result = (not self._bloom_filter.add(url))
         return result
